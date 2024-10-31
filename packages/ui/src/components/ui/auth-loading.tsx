@@ -4,10 +4,10 @@ import React from "react";
 import { motion } from "framer-motion";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { Wallet, ArrowRight } from "lucide-react";
-import { WalletButton } from "@repo/ui/components/ui/wallet-button";
 
 import Button from "@repo/ui/components/ui/Button";
 import { Link } from "./Link";
+import { WalletButton } from "./wallet-button";
 
 export default function LoginPage() {
   const { connected, publicKey } = useWallet();

@@ -23,6 +23,38 @@ const config = {
       },
     },
     extend: {
+      animation: {
+        shimmer: "shimmer 2s linear infinite",
+        "gradient-xy": "gradient-xy 3s ease infinite",
+        cosmic: "cosmic 5s ease infinite",
+        "spin-slow": "spin 3s linear infinite",
+        "pulse-slow": "pulse 3s ease-in-out infinite",
+        "delay-100": "delay 100ms",
+      },
+      keyframes: {
+        shimmer: {
+          "0%, 100%": { backgroundPosition: "100% 50%" },
+          "50%": { backgroundPosition: "0% 50%" },
+        },
+        "gradient-xy": {
+          "0%, 100%": {
+            "background-size": "400% 400%",
+            "background-position": "left top",
+          },
+          "50%": {
+            "background-size": "200% 200%",
+            "background-position": "right bottom",
+          },
+        },
+        cosmic: {
+          "0%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.2)" },
+          "100%": { transform: "scale(1)" },
+        },
+      },
+    },
+
+    extend: {
       colors: {
         zinc: {
           50: "#fafafa",
