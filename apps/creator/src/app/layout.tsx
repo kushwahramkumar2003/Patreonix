@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { Providers } from "../components/Providers";
 import "@solana/wallet-adapter-react-ui/styles.css";
+import { Toaster } from "sonner";
 
 // import "./globals.css";
 
@@ -29,7 +30,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <Toaster position="top-center" />
+        </Providers>
       </body>
     </html>
   );
