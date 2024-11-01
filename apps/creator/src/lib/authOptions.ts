@@ -54,6 +54,7 @@ export const authOptions: NextAuthOptions = {
 
           // Here you would typically fetch the user from your database
           // For now, we'll create a basic user object
+
           return {
             id: publicKey,
             name: `Creator ${publicKey.slice(0, 4)}...${publicKey.slice(-4)}`,
@@ -61,7 +62,6 @@ export const authOptions: NextAuthOptions = {
             publicKey: publicKey,
           };
         } catch (error) {
-          console.error("Authorization error:", error);
           return null;
         }
       },
@@ -75,6 +75,7 @@ export const authOptions: NextAuthOptions = {
         token.email = user.email;
         token.publicKey = user.publicKey;
       }
+
       return token;
     },
     async session({ session, token }) {
@@ -84,6 +85,7 @@ export const authOptions: NextAuthOptions = {
         session.user.email = token.email;
         session.user.publicKey = token.publicKey;
       }
+
       return session;
     },
   },
