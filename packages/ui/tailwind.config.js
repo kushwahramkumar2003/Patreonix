@@ -159,6 +159,10 @@ const config = {
         cosmic: "cosmic 15s linear infinite",
         "delay-100": "delay-100 3s linear infinite",
       },
+      fontFamily: {
+        sans: ["var(--font-sans)"],
+        heading: ["var(--font-heading)"],
+      },
     },
   },
   plugins: [tailwindcssAnimate, addVariablesForColors],
