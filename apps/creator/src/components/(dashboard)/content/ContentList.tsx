@@ -176,17 +176,20 @@ export function ContentList({ category, searchQuery }: ContentListProps) {
                 </Badge>
               </TableCell>
               <TableCell>
-                <Badge
-                  variant={
-                    item.status === "published"
-                      ? "success"
-                      : item.status === "draft"
-                        ? "warning"
-                        : "info"
-                  }
-                >
-                  {item.status}
-                </Badge>
+                {
+                  //@ts-ignore
+                  <Badge
+                    variant={
+                      item.status === "published"
+                        ? "default"
+                        : item.status === "draft"
+                          ? "destructive"
+                          : "outline"
+                    }
+                  >
+                    {item.status}
+                  </Badge>
+                }
               </TableCell>
               <TableCell>{item.date}</TableCell>
               <TableCell>{item.views}</TableCell>

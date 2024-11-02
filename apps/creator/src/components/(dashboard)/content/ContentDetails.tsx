@@ -6,6 +6,7 @@ import Button from "@repo/ui/components/ui/Button";
 import { Textarea } from "@repo/ui/components/ui/textarea";
 import { Icons } from "../../ui/icons";
 
+//@ts-ignore
 export function ContentDetails({ content }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(content.content);

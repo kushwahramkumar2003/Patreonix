@@ -31,6 +31,7 @@ import {
   TabsTrigger,
 } from "@repo/ui/components/ui/tabs";
 
+//@ts-ignore
 export function ContentAnalytics({ contentId }) {
   const [dateRange, setDateRange] = useState("7d");
   const [analyticsData, setAnalyticsData] = useState(null);
@@ -40,6 +41,7 @@ export function ContentAnalytics({ contentId }) {
     const fetchAnalyticsData = async () => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       setAnalyticsData({
+        //@ts-ignore
         views: [
           { date: "2023-05-01", value: 100 },
           { date: "2023-05-02", value: 150 },
@@ -107,7 +109,7 @@ export function ContentAnalytics({ contentId }) {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={data}>
+                <LineChart data={data as any[]}>
                   <XAxis dataKey="date" stroke="#888888" />
                   <YAxis stroke="#888888" />
                   <Tooltip

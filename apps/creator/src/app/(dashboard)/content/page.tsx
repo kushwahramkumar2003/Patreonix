@@ -133,7 +133,7 @@ export default function ContentManagementPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ContentAnalytics />
+              <ContentAnalytics contentId={undefined} />
             </CardContent>
           </Card>
         </TabsContent>

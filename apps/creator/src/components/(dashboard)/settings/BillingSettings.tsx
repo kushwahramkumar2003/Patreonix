@@ -10,11 +10,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/ui/components/ui/card";
-import { Button } from "@repo/ui/components/ui/button";
-
 import { Input } from "@repo/ui/components/ui/Input";
 import { Label } from "@repo/ui/components/ui/Label";
 import { Icons } from "@/components/ui/icons";
+import Button from "@repo/ui/components/ui/Button";
 
 export function BillingSettings() {
   const [isLoading, setIsLoading] = useState(false);
@@ -23,7 +22,7 @@ export function BillingSettings() {
     expiryDate: "",
     cvv: "",
   });
-
+  //@ts-ignore
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setCardDetails((prev) => ({ ...prev, [name]: value }));

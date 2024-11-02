@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@repo/ui/components/ui/button";
+import Button from "@repo/ui/components/ui/Button";
 import {
   Dialog,
   DialogContent,

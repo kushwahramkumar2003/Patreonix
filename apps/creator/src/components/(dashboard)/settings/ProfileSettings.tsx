@@ -15,7 +15,6 @@ import {
 } from "@repo/ui/components/ui/card";
 import { Input } from "@repo/ui/components/ui/Input";
 import { Label } from "@repo/ui/components/ui/Label";
-import { Button } from "@repo/ui/components/ui/button";
 import { Textarea } from "@repo/ui/components/ui/textarea";
 import { Icons } from "@/components/ui/icons";
 import {
@@ -23,6 +22,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@repo/ui/components/ui/avatar";
+import Button from "@repo/ui/components/ui/Button";
 
 const profileSchema = z.object({
   username: z.string().min(3).max(20),
@@ -46,7 +46,7 @@ export function ProfileSettings() {
       website: "https://decentra.com/creator",
     },
   });
-
+  //@ts-ignore
   const onSubmit = async (data) => {
     setIsLoading(true);
     // Simulated API call

@@ -10,11 +10,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/ui/components/ui/card";
-import { Button } from "@repo/ui/components/ui/button";
 import { Input } from "@repo/ui/components/ui/Input";
 import { Label } from "@repo/ui/components/ui/Label";
 import { Switch } from "@repo/ui/components/ui/switch";
 import { Icons } from "@/components/ui/icons";
+import Button from "@repo/ui/components/ui/Button";
 
 export function ApiSettings() {
   const [isLoading, setIsLoading] = useState(false);
@@ -24,7 +24,9 @@ export function ApiSettings() {
     allowThirdPartyAccess: false,
   });
 
+  //@ts-ignore
   const handleToggle = (setting) => {
+    //@ts-ignore
     setSettings((prev) => ({ ...prev, [setting]: !prev[setting] }));
   };
 

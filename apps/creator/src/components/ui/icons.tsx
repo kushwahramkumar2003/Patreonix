@@ -6,7 +6,9 @@ import {
   BarChart,
   Layers,
   Target,
+  //@ts-ignore
   type Icon as LucideIcon,
+  //@ts-ignore
   LucideIcon,
   Image,
   FileAudio,

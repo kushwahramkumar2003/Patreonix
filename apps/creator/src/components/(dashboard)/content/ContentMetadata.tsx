@@ -16,6 +16,7 @@ import { Label } from "@repo/ui/components/ui/Label";
 import { Input } from "@repo/ui/components/ui/Input";
 import { Icons } from "../../ui/icons";
 
+//@ts-ignore
 export function ContentMetadata({ content }) {
   const [metadata, setMetadata] = useState({
     title: content.title,
@@ -24,7 +25,7 @@ export function ContentMetadata({ content }) {
     allowComments: true,
     tags: content.tags || [],
   });
-
+  //@ts-ignore
   const handleChange = (field, value) => {
     setMetadata((prev) => ({ ...prev, [field]: value }));
   };

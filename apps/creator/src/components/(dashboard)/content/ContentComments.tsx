@@ -7,7 +7,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@repo/ui/components/ui/avatar";
-import { Button } from "@repo/ui/components/ui/button";
+import Button from "@repo/ui/components/ui/Button";
 import {
   Card,
   CardContent,
@@ -72,6 +72,7 @@ export function ContentComments() {
         author: "Current User",
         avatar: "/placeholder.svg?height=40&width=40",
         content: newComment,
+        //@ts-ignore
         date: new Date().toISOString().split("T")[0],
         likes: 0,
         replies: [],

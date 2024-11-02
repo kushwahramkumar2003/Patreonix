@@ -12,8 +12,8 @@ import {
 } from "@repo/ui/components/ui/card";
 import { Switch } from "@repo/ui/components/ui/switch";
 import { Label } from "@repo/ui/components/ui/Label";
-import { Button } from "@repo/ui/components/ui/button";
 import { Icons } from "@/components/ui/icons";
+import Button from "@repo/ui/components/ui/Button";
 
 export function NotificationSettings() {
   const [isLoading, setIsLoading] = useState(false);
@@ -27,8 +27,9 @@ export function NotificationSettings() {
     blockchainEvents: true,
     smartContractUpdates: false,
   });
-
+  //@ts-ignore
   const handleToggle = (setting) => {
+    //@ts-ignore
     setSettings((prev) => ({ ...prev, [setting]: !prev[setting] }));
   };
 

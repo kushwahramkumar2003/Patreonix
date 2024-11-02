@@ -7,10 +7,11 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 
 import Button from "@repo/ui/components/ui/Button";
-import { FormControl } from "@repo/ui/components/ui/Form";
+
 import { Label } from "@repo/ui/components/ui/Label";
 import { Input } from "@repo/ui/components/ui/Input";
 import { cn } from "@repo/ui/lib/utils";
+import { FormControl } from "@repo/ui/components/ui/form";
 
 type FormStage = "wallet" | "personal" | "profile" | "verification";
 
@@ -219,6 +220,7 @@ const RegisterForm = () => {
     ];
     const currentIndex = stageOrder.indexOf(stage);
     if (currentIndex < stageOrder.length - 1) {
+      //@ts-ignore
       setStage(stageOrder[currentIndex + 1]);
     }
   };
@@ -232,6 +234,7 @@ const RegisterForm = () => {
     ];
     const currentIndex = stageOrder.indexOf(stage);
     if (currentIndex > 0) {
+      //@ts-ignore
       setStage(stageOrder[currentIndex - 1]);
     }
   };

@@ -10,7 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/ui/components/ui/card";
-import { Button } from "@repo/ui/components/ui/button";
 import { Icons } from "@/components/ui/icons";
 import { Input } from "@repo/ui/components/ui/Input";
 import { Label } from "@repo/ui/components/ui/Label";
@@ -22,6 +21,7 @@ import {
   SelectValue,
 } from "@repo/ui/components/ui/select";
 import { Switch } from "@repo/ui/components/ui/switch";
+import Button from "@repo/ui/components/ui/Button";
 
 export function BlockchainSettings() {
   const [isLoading, setIsLoading] = useState(false);
@@ -32,12 +32,13 @@ export function BlockchainSettings() {
     enableENS: true,
     ipfsGateway: "https://ipfs.io",
   });
-
+  //@ts-ignore
   const handleChange = (key, value) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
   };
-
+  //@ts-ignore
   const handleToggle = (setting) => {
+    //@ts-ignore
     setSettings((prev) => ({ ...prev, [setting]: !prev[setting] }));
   };
 

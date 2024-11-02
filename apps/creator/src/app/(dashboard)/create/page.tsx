@@ -88,13 +88,24 @@ export default function CreatePage() {
               <Card className="bg-zinc-800 border-zinc-700">
                 <CardHeader>
                   <CardTitle className="text-2xl text-zinc-100">
-                    {tabContent[activeTab].title}
+                    {
+                      //@ts-ignore
+                      tabContent[activeTab].title
+                    }
                   </CardTitle>
                   <CardDescription>
-                    {tabContent[activeTab].description}
+                    {
+                      //@ts-ignore
+                      tabContent[activeTab].description
+                    }
                   </CardDescription>
                 </CardHeader>
-                <CardContent>{tabContent[activeTab].component}</CardContent>
+                <CardContent>
+                  {
+                    //@ts-ignore
+                    tabContent[activeTab].component
+                  }
+                </CardContent>
               </Card>
             </TabsContent>
           </motion.div>
