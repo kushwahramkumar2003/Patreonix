@@ -20,9 +20,7 @@ export default function DashboardLayout({
           <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
           <main className="flex-1">
             <ScrollArea className="h-full">
-              <div className="container mx-auto p-6 lg:p-8">
-                {children}
-              </div>
+              <div className="container mx-auto p-6 lg:p-8">{children}</div>
             </ScrollArea>
           </main>
         </div>

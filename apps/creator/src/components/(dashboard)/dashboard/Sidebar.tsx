@@ -102,7 +102,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                           {item.label}
                           {isActive && (
                             <motion.div
-                              className="absolute left-0 top-1/2 h-full w-1 -translate-y-1/2 rounded-r-lg bg-zinc-400"
+                              className="absolute left-0 top-0 h-full w-1 -translate-y-1/2 rounded-r-lg bg-zinc-400"
                               layoutId="activeNavIndicator"
                             />
                           )}

@@ -47,6 +47,8 @@ export default function LoginPage() {
         redirect: false,
       });
 
+      console.log("result", result);
+
       if (result?.error) {
         setSigningStatus("error");
         toast.error("Failed to sign in. Please try again.");
