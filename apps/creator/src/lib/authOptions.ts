@@ -3,13 +3,39 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import z from "zod";
 import { AUTH_TOKEN_EXPIRATION_TIME } from "./config";
 import nacl from "tweetnacl";
-import { PublicKey } from "@solana/web3.js";
+import { Connection, PublicKey } from "@solana/web3.js";
 import bs58 from "bs58";
+import * as anchor from "@coral-xyz/anchor";
+import { Program } from "@coral-xyz/anchor";
+import { PatreonixProgramms } from "@repo/patreonix_programms/types";
+import idl from "@repo/patreonix_programms/idl";
 
 const SigninSchema = z.object({
   publicKey: z.string(),
   signature: z.any(),
 });
+
+// Create connection to Solana network
+const createConnection = () => {
+  const endpoint = "http://127.0.0.1:8898";
+  if (!endpoint) {
+    throw new Error("NEXT_PUBLIC_SOLANA_RPC_URL is not defined");
+  }
+  return new Connection(endpoint);
+};
+
+// Initialize Anchor program
+const createProgram = (connection: Connection) => {
+  // Create a read-only provider
+  const provider = new anchor.AnchorProvider(
+    connection,
+    {} as any, // Wallet not needed for read-only operations
+    { commitment: "processed" }
+  );
+
+  // Create program instance
+  return new Program(idl as PatreonixProgramms, provider);
+};
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -38,7 +64,6 @@ export const authOptions: NextAuthOptions = {
 
           // Verify signature
           const signatureUint8 = bs58.decode(signature);
-
           const publicKeyBytes = new PublicKey(publicKey).toBytes();
 
           const verified = nacl.sign.detached.verify(
@@ -52,40 +77,62 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
 
-          // Here you would typically fetch the user from your database
-          // For now, we'll create a basic user object
+          try {
+           
+            const connection = createConnection();
+            const program = createProgram(connection);
 
-          return {
-            id: publicKey,
-            name: `Creator ${publicKey.slice(0, 4)}...${publicKey.slice(-4)}`,
-            email: `${publicKey}@patreonix.com`,
-            publicKey: publicKey,
-          };
+            console.log("Connection and program initialized");
+
+           
+            const [creatorPDA] = PublicKey.findProgramAddressSync(
+              [Buffer.from("creator"), new PublicKey(publicKey).toBuffer()],
+              program.programId
+            );
+            console.log("Creator PDA:", creatorPDA.toBase58());
+
+            // Fetch creator account
+            const creatorAccount =
+              await program.account.creator.fetch(creatorPDA);
+
+            console.log("Creator account fetched:", creatorAccount);
+
+            return {
+              id: publicKey,
+              name: creatorAccount.name,
+              email: creatorAccount.email || `${publicKey}@patreonix.com`,
+              bio: creatorAccount.bio,
+              isActive: creatorAccount.isActive,
+              publicKey: publicKey,
+            };
+          } catch (error) {
+            console.error("User not found in Solana program:", error);
+            return null;
+          }
         } catch (error) {
+          console.error("Failed to sign in:", error);
           return null;
         }
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.name = user.name;
         token.email = user.email;
         token.publicKey = user.publicKey;
       }
-
       return token;
     },
-    async session({ session, token }) {
+    session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id;
         session.user.name = token.name;
         session.user.email = token.email;
         session.user.publicKey = token.publicKey;
       }
-
       return session;
     },
   },

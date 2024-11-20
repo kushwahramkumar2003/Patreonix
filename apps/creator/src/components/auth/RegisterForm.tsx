@@ -29,9 +29,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 type FormStage = "wallet" | "personal" | "profile" | "verification";
 
-const PROGRAMM_ID = new PublicKey(
-  "4iL34RsAAc1i4wYBCotcUoHdohPVZf5BBberACyxZ37Z"
-);
 
 const formSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
