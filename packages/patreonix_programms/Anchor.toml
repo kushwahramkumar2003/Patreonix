@@ -4,8 +4,10 @@
 resolution = true
 skip-lint = false
 
+
 [programs.localnet]
-patreonix_programms = "5uh6s9rCQaPKbfdZ31opFWeUigSdzZrA6obGFtp4PFde"
+patreonix_programms = "4iL34RsAAc1i4wYBCotcUoHdohPVZf5BBberACyxZ37Z"
+
 
 [registry]
 url = "https://api.apr.dev"
@@ -13,7 +15,8 @@ url = "https://api.apr.dev"
 [provider]
 cluster = "http://127.0.0.1:8898"
 wallet = "~/.config/solana/id.json"
-# wallet = "/home/ramkumar/.config/solana/id.json"
+# wallet = "/home/ramkumar/.config/solana/id.json"  
+
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 'tests/**/*.ts'"

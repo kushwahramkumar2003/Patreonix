@@ -41,3 +41,5 @@ yarn-error.log*
 # Editor directories
 package-lock.json
 yarn.lock
+
+test-ledger

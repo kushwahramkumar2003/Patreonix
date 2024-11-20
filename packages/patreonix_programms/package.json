@@ -1,10 +1,14 @@
 {
-  "name": "patreonix_programms",
+  "name": "@repo/patreonix_programms",
   "version": "1.0.0",
   "license": "ISC",
   "scripts": {
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
+  },
+  "exports": {
+    "./types": "./target/types/patreonix_programms.ts",
+    "./idl": "./target/idl/patreonix_programms.json"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.30.1"
