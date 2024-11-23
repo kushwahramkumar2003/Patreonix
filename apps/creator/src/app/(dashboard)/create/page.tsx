@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Tabs,
@@ -20,9 +20,32 @@ import { CreatePostForm } from "../../../components/(dashboard)/create/CreatePos
 import { CreatePollForm } from "../../../components/(dashboard)/create/CreatePollForm";
 import { CreateTierForm } from "../../../components/(dashboard)/create/CreateTierForm";
 import { CreateGoalForm } from "../../../components/(dashboard)/create/CreateGoalForm";
+import { useSearchParams, useRouter } from "next/navigation";
 
 export default function CreatePage() {
-  const [activeTab, setActiveTab] = useState("post");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const typeFromURL = searchParams.get("type");
+
+  const [activeTab, setActiveTab] = useState<"post" | "poll" | "tier" | "goal">(
+    typeFromURL && ["post", "poll", "tier", "goal"].includes(typeFromURL)
+      ? (typeFromURL as "post" | "poll" | "tier" | "goal")
+      : "post"
+  );
+
+  const handleTabChange = (value) => {
+    setActiveTab(value);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("type", value);
+    router.push(`/create?${newParams.toString()}`);
+  };
+
+  useEffect(() => {
+    if (typeFromURL && ["post", "poll", "tier", "goal"].includes(typeFromURL)) {
+      setActiveTab(typeFromURL as "post" | "poll" | "tier" | "goal");
+    }
+  }, [typeFromURL]);
 
   const tabContent = {
     post: {
@@ -63,7 +86,11 @@ export default function CreatePage() {
       className="container mx-auto py-8"
     >
       <h1 className="text-3xl font-bold text-zinc-100 mb-6">Create Content</h1>
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs
+        value={activeTab}
+        onValueChange={handleTabChange}
+        className="w-full"
+      >
         <TabsList className="grid w-full grid-cols-4 bg-zinc-800">
           {Object.entries(tabContent).map(([key, { title, icon }]) => (
             <TabsTrigger
@@ -88,24 +115,13 @@ export default function CreatePage() {
               <Card className="bg-zinc-800 border-zinc-700">
                 <CardHeader>
                   <CardTitle className="text-2xl text-zinc-100">
-                    {
-                      //@ts-ignore
-                      tabContent[activeTab].title
-                    }
+                    {tabContent[activeTab].title}
                   </CardTitle>
                   <CardDescription>
-                    {
-                      //@ts-ignore
-                      tabContent[activeTab].description
-                    }
+                    {tabContent[activeTab].description}
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  {
-                    //@ts-ignore
-                    tabContent[activeTab].component
-                  }
-                </CardContent>
+                <CardContent>{tabContent[activeTab].component}</CardContent>
               </Card>
             </TabsContent>
           </motion.div>
