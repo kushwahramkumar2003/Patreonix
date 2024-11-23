@@ -13,7 +13,7 @@ patreonix_programms = "4iL34RsAAc1i4wYBCotcUoHdohPVZf5BBberACyxZ37Z"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "http://127.0.0.1:8898"
+cluster = "http://127.0.0.1:8899"
 wallet = "~/.config/solana/id.json"
 # wallet = "/home/ramkumar/.config/solana/id.json"  
 

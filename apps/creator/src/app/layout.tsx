@@ -75,7 +75,7 @@ export default function RootLayout({
       <body className="font-sans bg-zinc-900 text-zinc-100">
         <Providers>
           {children}
-          <Toaster position="top-center" />
+          <Toaster position="top-center" richColors/>
         </Providers>
       </body>
     </html>

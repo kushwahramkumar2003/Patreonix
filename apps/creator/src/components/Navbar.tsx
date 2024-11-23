@@ -5,8 +5,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import Button from "@repo/ui/components/ui/Button";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { WalletDialog } from "./(dashboard)/dashboard/WalletDialog";
 
 const Navbar = () => {
+  const { data } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const router = useRouter();
@@ -40,30 +43,41 @@ const Navbar = () => {
             </a>
           </div>
           <div className="hidden md:block">
-            <div className="ml-10 flex items-baseline space-x-4">
-              {/* <a href="#features" className="hover:text-zinc-300 px-3 py-2 rounded-md text-sm font-medium">Features</a>
-              <a href="#how-it-works" className="hover:text-zinc-300 px-3 py-2 rounded-md text-sm font-medium">How It Works</a>
-              <a href="#showcase" className="hover:text-zinc-300 px-3 py-2 rounded-md text-sm font-medium">Showcase</a>
-              <a href="#pricing" className="hover:text-zinc-300 px-3 py-2 rounded-md text-sm font-medium">Pricing</a> */}
-              <Button
-                variant="ghost"
-                size="md"
-                onClick={() => {
-                  router.push("/login");
-                }}
-              >
-                Sign In
-              </Button>
-              <Button
-                variant="cosmic"
-                size="md"
-                onClick={() => {
-                  router.push("/register");
-                }}
-              >
-                Get Started
-              </Button>
-            </div>
+            {data?.user ? (
+              <div className="flex flex-row gap-3 justify-center items-center">
+                <WalletDialog />
+                <Button
+                  variant="cosmic"
+                  size="md"
+                  onClick={() => {
+                    router.push("/dashboard");
+                  }}
+                >
+                  Dashboard
+                </Button>
+              </div>
+            ) : (
+              <div className="ml-10 flex items-baseline space-x-4">
+                <Button
+                  variant="ghost"
+                  size="md"
+                  onClick={() => {
+                    router.push("/login");
+                  }}
+                >
+                  Sign In
+                </Button>
+                <Button
+                  variant="cosmic"
+                  size="md"
+                  onClick={() => {
+                    router.push("/register");
+                  }}
+                >
+                  Get Started
+                </Button>
+              </div>
+            )}
           </div>
           <div className="md:hidden">
             <button

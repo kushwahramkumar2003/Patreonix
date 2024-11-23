@@ -9,6 +9,7 @@ import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { PatreonixProgramms } from "@repo/patreonix_programms/types";
 import idl from "@repo/patreonix_programms/idl";
+import config from "@/config";
 
 const SigninSchema = z.object({
   publicKey: z.string(),
@@ -17,7 +18,7 @@ const SigninSchema = z.object({
 
 // Create connection to Solana network
 const createConnection = () => {
-  const endpoint = "http://127.0.0.1:8898";
+  const endpoint = config.rpcEndpoint;
   if (!endpoint) {
     throw new Error("NEXT_PUBLIC_SOLANA_RPC_URL is not defined");
   }
@@ -78,17 +79,16 @@ export const authOptions: NextAuthOptions = {
           }
 
           try {
-           
             const connection = createConnection();
             const program = createProgram(connection);
 
             console.log("Connection and program initialized");
 
-           
             const [creatorPDA] = PublicKey.findProgramAddressSync(
               [Buffer.from("creator"), new PublicKey(publicKey).toBuffer()],
               program.programId
             );
+            console.log("programm id", program.programId.toBase58());
             console.log("Creator PDA:", creatorPDA.toBase58());
 
             // Fetch creator account
@@ -104,6 +104,7 @@ export const authOptions: NextAuthOptions = {
               bio: creatorAccount.bio,
               isActive: creatorAccount.isActive,
               publicKey: publicKey,
+              avatar: creatorAccount?.avatar || null,
             };
           } catch (error) {
             console.error("User not found in Solana program:", error);
@@ -123,6 +124,7 @@ export const authOptions: NextAuthOptions = {
         token.name = user.name;
         token.email = user.email;
         token.publicKey = user.publicKey;
+        token.avatar = user?.avatar;
       }
       return token;
     },
@@ -132,6 +134,7 @@ export const authOptions: NextAuthOptions = {
         session.user.name = token.name;
         session.user.email = token.email;
         session.user.publicKey = token.publicKey;
+        session.user.avatar = token.avatar;
       }
       return session;
     },

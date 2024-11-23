@@ -57,7 +57,7 @@ export function WalletDialog() {
             Manage your connected wallet and view your details
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 py-4">
+        <div className="space-y-4 py-4 ">
           <div className="flex items-center space-x-4">
             <div className="flex-1 space-y-1">
               <p className="text-sm font-medium text-zinc-300">
@@ -86,7 +86,7 @@ export function WalletDialog() {
               <ExternalLink className="h-4 w-4" />
             </Button>
           </div>
-          <div className="flex justify-between">
+          <div className="flex justify-center items-center">
             <Button
               variant="ghost"
               onClick={() => disconnect()}

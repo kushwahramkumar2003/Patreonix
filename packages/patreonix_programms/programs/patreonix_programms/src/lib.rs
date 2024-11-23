@@ -16,12 +16,14 @@ pub mod patreonix_programms {
         name: String,
         email: Option<String>,
         bio: Option<String>,
+        avatar: Option<String>,
     ) -> Result<()> {
         let creator = &mut ctx.accounts.creator;
         creator.authority = ctx.accounts.authority.key();
         creator.name = name;
         creator.email = email;
         creator.bio = bio;
+        creator.avatar = avatar;
         creator.registered_at = Clock::get()?.unix_timestamp;
         creator.is_active = true;
         creator.total_supporters = 0;
@@ -35,6 +37,7 @@ pub mod patreonix_programms {
             name: creator.name.clone(),
             email: creator.email.clone(),
             bio: creator.bio.clone(),
+            avatar: creator.avatar.clone(),
             registered_at: creator.registered_at,
             is_active: creator.is_active,
             total_supporters: creator.total_supporters,
@@ -46,6 +49,7 @@ pub mod patreonix_programms {
         name: Option<String>,
         email: Option<String>,
         bio: Option<String>,
+        avatar: Option<String>,
     ) -> Result<()> {
         let creator = &mut ctx.accounts.creator;
 
@@ -55,8 +59,12 @@ pub mod patreonix_programms {
         if let Some(email) = email {
             creator.email = Some(email);
         }
+
         if let Some(bio) = bio {
             creator.bio = Some(bio);
+        }
+        if let Some(avatar) = avatar {
+            creator.avatar = Some(avatar);
         }
 
         msg!("Creator updated: {}", creator.name);
@@ -129,6 +137,7 @@ pub struct Creator {
     pub name: String,
     pub email: Option<String>,
     pub bio: Option<String>,
+    pub avatar: Option<String>,
     pub registered_at: i64,
     pub is_active: bool,
     pub total_supporters: u64,
@@ -150,6 +159,7 @@ pub struct CreatorInfo {
     pub name: String,
     pub email: Option<String>,
     pub bio: Option<String>,
+    pub avatar: Option<String>,
     pub registered_at: i64,
     pub is_active: bool,
     pub total_supporters: u64,

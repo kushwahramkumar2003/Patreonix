@@ -26,7 +26,12 @@ describe("patreonix_programms", () => {
 
   it("Can register a creator", async () => {
     const tx = await program.methods
-      .registerCreator("Alice", "alice@example.com", "Crypto artist")
+      .registerCreator(
+        "Alice",
+        "alice@example.com",
+        "Crypto artist",
+        "avatar_url"
+      )
       .accounts({
         creator: creatorPDA,
         authority: provider.publicKey,
@@ -49,7 +54,8 @@ describe("patreonix_programms", () => {
       .updateCreator(
         "Alice Pro",
         "alice.pro@example.com",
-        "Professional Crypto Artist"
+        "Professional Crypto Artist",
+        "new_avatar_url"
       )
       .accounts({
         creator: creatorPDA,

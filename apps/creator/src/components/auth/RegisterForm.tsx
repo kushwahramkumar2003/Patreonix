@@ -1,14 +1,14 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Mail, Briefcase, Camera, Wallet } from "lucide-react";
+import { User, Mail, Briefcase, Camera, Wallet, Loader2 } from "lucide-react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { Connection, PublicKey } from "@solana/web3.js";
+import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { PatreonixProgramms } from "@repo/patreonix_programms/types";
 import IDL from "@repo/patreonix_programms/idl";
 import Button from "@repo/ui/components/ui/Button";
@@ -26,9 +26,11 @@ import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
 import { AnchorProvider } from "@coral-xyz/anchor";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { addAndPinFile } from "@/lib/ipfs";
+import { useRouter } from "next/navigation";
+import { toast, Toaster } from "sonner";
 
 type FormStage = "wallet" | "personal" | "profile" | "verification";
-
 
 const formSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -46,13 +48,16 @@ const RegisterForm = () => {
   const { connected, publicKey } = useWallet();
   const { connection } = useConnection();
   const wallet = useAnchorWallet();
+  const router = useRouter();
 
-  const [stage, setStage] = React.useState<FormStage>("wallet");
-  const [program, setProgram] =
-    React.useState<Program<PatreonixProgramms> | null>(null);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-  const [creatorPDA, setCreatorPDA] = React.useState<PublicKey | null>(null);
+  const [stage, setStage] = useState<FormStage>("wallet");
+  const [program, setProgram] = useState<Program<PatreonixProgramms> | null>(
+    null
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [creatorPDA, setCreatorPDA] = useState<PublicKey | null>(null);
+  const [isDevMode, setIsDevMode] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -67,34 +72,29 @@ const RegisterForm = () => {
     },
   });
 
-  // Initialize program and PDA when wallet connects
-  React.useEffect(() => {
+  useEffect(() => {
     const initializeProgram = async () => {
-      console.log("Initializing program1...");
       if (connected && wallet && publicKey) {
         try {
           const provider = new AnchorProvider(connection, wallet, {
             commitment: "confirmed",
           });
 
-          console.log("Initializing program2...");
-
           const programInstance = new Program<PatreonixProgramms>(
             IDL as PatreonixProgramms,
             provider
           );
 
-          console.log("Program initialized:", programInstance);
-
           setProgram(programInstance);
 
-          // Generate Creator PDA
           const [pda] = PublicKey.findProgramAddressSync(
             [Buffer.from("creator"), publicKey.toBuffer()],
             programInstance.programId
           );
-          console.log("Creator PDA:", pda.toBase58());
           setCreatorPDA(pda);
+
+          // Check if we're in development mode
+          setIsDevMode(process.env.NODE_ENV === "development");
         } catch (err) {
           console.error("Error initializing program:", err);
           setError("Failed to initialize program");
@@ -113,7 +113,6 @@ const RegisterForm = () => {
       "verification",
     ];
     const currentIndex = stageOrder.indexOf(stage);
-    console.log("currentIndex", currentIndex);
     if (currentIndex < stageOrder.length - 1) {
       const nextStage = stageOrder[currentIndex + 1];
       if (nextStage) {
@@ -139,25 +138,33 @@ const RegisterForm = () => {
   };
 
   const onSubmit = async (data: FormData) => {
-    console.log("onSubmit called..");
     if (!connected || !publicKey || !program || !creatorPDA) {
       setError("Please connect your wallet first");
       return;
     }
-
-    console.log("stage", stage);
 
     if (stage === "verification") {
       setIsLoading(true);
       setError(null);
 
       try {
-        // Create creator account
+        if (isDevMode) {
+          await connection.requestAirdrop(publicKey, LAMPORTS_PER_SOL);
+        }
+
+        let hash = null;
+        if (data.avatar) {
+          const formData = new FormData();
+          formData.append("file", data.avatar);
+          hash = await addAndPinFile(formData);
+        }
+
         const tx = await program.methods
           .registerCreator(
             data.creatorName,
             data.email || null,
-            data.bio || null
+            data.bio || null,
+            hash
           )
           .accounts({
             creator: creatorPDA,
@@ -166,9 +173,6 @@ const RegisterForm = () => {
           })
           .rpc();
 
-        console.log("Creator registration signature:", tx);
-
-        // Verify the creation was successful
         const creatorAccount = await program.account.creator.fetch(creatorPDA);
 
         if (
@@ -177,16 +181,20 @@ const RegisterForm = () => {
           creatorAccount.bio === (data.bio || null) &&
           creatorAccount.isActive === true
         ) {
-          console.log("Creator account verified:", creatorAccount);
-          alert(
-            "Registration successful! Your creator account has been created."
-          );
+          toast.success("Registration Successful!", {
+            description: "Your creator account has been created.",
+            duration: 5000,
+          });
+          setTimeout(() => router.push("/login"), 5000);
         } else {
           throw new Error("Creator account verification failed");
         }
       } catch (err: any) {
         console.error("Error registering creator:", err);
         setError(err.message || "Registration failed. Please try again.");
+        toast.error("Registration Failed", {
+          description: err.message || "Please try again.",
+        });
       } finally {
         setIsLoading(false);
       }
@@ -218,6 +226,21 @@ const RegisterForm = () => {
             <div className="text-sm text-zinc-400 text-center">
               Connected: {publicKey.toBase58().slice(0, 8)}...
             </div>
+          )}
+          {isDevMode && (
+            <Button
+              onClick={async () => {
+                if (publicKey) {
+                  await connection.requestAirdrop(publicKey, LAMPORTS_PER_SOL);
+                  toast.success("Airdrop Successful", {
+                    description: "1 SOL has been airdropped to your wallet.",
+                  });
+                }
+              }}
+              className="w-full"
+            >
+              Request Airdrop (Dev Mode)
+            </Button>
           )}
         </div>
       ),
@@ -399,6 +422,7 @@ const RegisterForm = () => {
 
   return (
     <div className="bg-zinc-800/50 backdrop-blur-xl rounded-lg border border-zinc-700 p-6 shadow-xl">
+     
       <AnimatePresence mode="wait">
         <motion.div
           key={stage}
@@ -431,13 +455,15 @@ const RegisterForm = () => {
                 ) : (
                   <Button
                     onClick={handleNext}
-                    type="submit"
                     variant="animated"
                     className="ml-auto"
                     disabled={isLoading || (stage === "wallet" && !connected)}
                   >
+                    {isLoading ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : null}
                     {isLoading
-                      ? "Loading..."
+                      ? "Creating Account..."
                       : stage === "verification"
                         ? "Complete"
                         : "Next"}
