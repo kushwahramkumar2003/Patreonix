@@ -1,15 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Textarea } from "@repo/ui/components/ui/textarea";
-import { Switch } from "@repo/ui/components/ui/switch";
 import { toast } from "sonner";
 import Button from "@repo/ui/components/ui/Button";
-import { Icons } from "../../ui/icons";
 import { Input } from "@repo/ui/components/ui/Input";
 import {
   Select,
@@ -19,20 +17,6 @@ import {
   SelectValue,
 } from "@repo/ui/components/ui/select";
 import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@repo/ui/components/ui/alert";
-import { RadioGroup, RadioGroupItem } from "@repo/ui/components/ui/radio-group";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@repo/ui/components/ui/popover";
-import { Calendar } from "@repo/ui/components/ui/calendar";
-import { cn } from "@repo/ui/lib/utils";
-import { format } from "date-fns";
-import {
   Form,
   FormControl,
   FormDescription,
@@ -41,6 +25,19 @@ import {
   FormLabel,
   FormMessage,
 } from "@repo/ui/components/ui/form";
+import {
+  useAnchorWallet,
+  useConnection,
+  useWallet,
+} from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
+import { getCreatorPda } from "@/lib/anchor";
+import { addAndPinFile } from "@/lib/ipfs";
+import { Icons } from "@/components/ui/icons";
+import * as anchor from "@coral-xyz/anchor";
+import idl from "@repo/patreonix_programms/idl";
+import { PatreonixProgramms } from "@repo/patreonix_programms/types";
+import { PlugIcon } from "lucide-react";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -49,8 +46,11 @@ const formSchema = z.object({
     .string()
     .min(2, "Title must be at least 2 characters")
     .max(100, "Title must be less than 100 characters"),
-  content: z.string().min(10, "Content must be at least 10 characters"),
-  category: z.string().min(1, "Please select a category"),
+  description: z
+    .string()
+    .min(10, "Description must be at least 10 characters")
+    .max(500, "Description must be less than 500 characters"),
+  content: z.string().min(1, "Content is required"),
   contentType: z.enum(["text", "image", "video", "audio"]),
   file: z
     .instanceof(File)
@@ -61,9 +61,6 @@ const formSchema = z.object({
       }
       return true;
     }, `Max file size is 5MB.`),
-  isPublic: z.boolean(),
-  scheduledDate: z.date().optional(),
-  tiers: z.array(z.string()).min(1, "Select at least one tier"),
 });
 
 const contentTypeOptions = [
@@ -74,35 +71,109 @@ const contentTypeOptions = [
 ];
 
 export function CreatePostForm() {
+  const wallet = useAnchorWallet();
+  const { connection } = useConnection();
   const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { publicKey } = useWallet();
+  const [program, setProgram] =
+    useState<anchor.Program<PatreonixProgramms> | null>(null);
+
+  const initializeProgram = useCallback(() => {
+    if (!wallet) {
+      console.log("Wallet not connected!");
+      return;
+    }
+    const provider = new anchor.AnchorProvider(connection, wallet, {
+      commitment: "processed",
+    });
+    const program = new anchor.Program(idl as PatreonixProgramms, provider);
+    setProgram(program);
+  }, [wallet, connection]);
+
+  useEffect(() => {
+    initializeProgram();
+  }, [initializeProgram]);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
+      description: "",
       content: "",
-      category: "",
       contentType: "text",
-      isPublic: true,
-      tiers: [],
     },
   });
 
   const contentType = form.watch("contentType");
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!publicKey) {
+      toast.error("Please connect your wallet first.");
+      return;
+    }
+
+    if (!program) {
+      toast.error("Program not initialized. Please try again.");
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
-      // Simulating an API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      toast.success("Post created successfully!");
-      console.log(values);
+      let contentUrl = values.content;
+      if (values.file) {
+        const formData = new FormData();
+        formData.append("file", values.file);
+        contentUrl = await addAndPinFile(formData);
+      }
+
+      const contentTypeMap = {
+        text: { text: {} },
+        image: { image: {} },
+        video: { video: {} },
+        audio: { audio: {} },
+      };
+
+      const [contentPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("content"), publicKey.toBuffer()],
+        program.programId
+      );
+
+      const creatorPda = await getCreatorPda(publicKey);
+
+      if (!creatorPda) {
+        toast.error("Failed to get creator PDA. Please try again.");
+        return;
+      }
+
+      const tx = await program.methods
+        .createContent(
+          values.title,
+          values.description,
+          contentUrl,
+          contentTypeMap[values.contentType]
+        )
+        .accounts({
+          // content: contentPda,
+          creator: creatorPda,
+          authority: publicKey,
+          // systemProgram: anchor.web3.SystemProgram.programId,
+        })
+        .rpc();
+
+      console.log("Transaction signature:", tx);
+      toast.success("Content created successfully!");
       form.reset();
       setStep(1);
     } catch (error) {
-      toast.error("Failed to create post. Please try again.");
+      console.error("Error creating content:", error);
+      toast.error("Failed to create content. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const nextStep = () => setStep((prev) => Math.min(prev + 1, 3));
+  const nextStep = () => setStep((prev) => Math.min(prev + 1, 2));
   const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
 
   return (
@@ -126,13 +197,13 @@ export function CreatePostForm() {
                       <FormLabel>Title</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Enter post title"
+                          placeholder="Enter content title"
                           {...field}
                           className="bg-zinc-700 text-zinc-100"
                         />
                       </FormControl>
                       <FormDescription>
-                        Give your post a catchy title
+                        Give your content a catchy title
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -140,32 +211,19 @@ export function CreatePostForm() {
                 />
                 <FormField
                   control={form.control}
-                  name="category"
+                  name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="bg-zinc-700 text-zinc-100">
-                            <SelectValue placeholder="Select a category" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-zinc-700 text-zinc-100">
-                          <SelectItem value="update">Update</SelectItem>
-                          <SelectItem value="announcement">
-                            Announcement
-                          </SelectItem>
-                          <SelectItem value="content">Content</SelectItem>
-                          <SelectItem value="behind-the-scenes">
-                            Behind the Scenes
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Enter content description"
+                          {...field}
+                          className="bg-zinc-700 text-zinc-100"
+                        />
+                      </FormControl>
                       <FormDescription>
-                        Choose a category for your post
+                        Provide a brief description of your content
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -177,28 +235,29 @@ export function CreatePostForm() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Content Type</FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                          className="flex flex-col space-y-1"
-                        >
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="bg-zinc-700 text-zinc-100">
+                            <SelectValue placeholder="Select content type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-zinc-700 text-zinc-100">
                           {contentTypeOptions.map((option) => (
-                            <FormItem
-                              key={option.value}
-                              className="flex items-center space-x-3 space-y-0"
-                            >
-                              <FormControl>
-                                <RadioGroupItem value={option.value} />
-                              </FormControl>
-                              <FormLabel className="font-normal">
-                                <option.icon className="w-4 h-4 mr-2 inline-block" />
+                            <SelectItem key={option.value} value={option.value}>
+                              <div className="flex items-center">
+                                <option.icon className="mr-2 h-4 w-4" />
                                 {option.label}
-                              </FormLabel>
-                            </FormItem>
+                              </div>
+                            </SelectItem>
                           ))}
-                        </RadioGroup>
-                      </FormControl>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Choose the type of content you're creating
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -207,7 +266,7 @@ export function CreatePostForm() {
             )}
             {step === 2 && (
               <>
-                {contentType === "text" && (
+                {contentType === "text" ? (
                   <FormField
                     control={form.control}
                     name="content"
@@ -216,22 +275,16 @@ export function CreatePostForm() {
                         <FormLabel>Content</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Write your post content here..."
+                            placeholder="Write your content here..."
                             className="min-h-[200px] bg-zinc-700 text-zinc-100"
                             {...field}
                           />
                         </FormControl>
-                        <FormDescription>
-                          You can use markdown for formatting
-                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                )}
-                {(contentType === "image" ||
-                  contentType === "video" ||
-                  contentType === "audio") && (
+                ) : (
                   <FormField
                     control={form.control}
                     name="file"
@@ -258,123 +311,6 @@ export function CreatePostForm() {
                     )}
                   />
                 )}
-                <FormField
-                  control={form.control}
-                  name="tiers"
-                  render={() => (
-                    <FormItem>
-                      <FormLabel>Select Tiers</FormLabel>
-                      <FormControl>
-                        <div className="flex flex-wrap gap-2">
-                          {["Free", "Basic", "Premium", "VIP"].map((tier) => (
-                            <FormField
-                              key={tier}
-                              control={form.control}
-                              name="tiers"
-                              render={({ field }) => (
-                                <FormItem
-                                  key={tier}
-                                  className="flex items-center space-x-1 space-y-0"
-                                >
-                                  <FormControl>
-                                    <input
-                                      type="checkbox"
-                                      checked={field.value?.includes(tier)}
-                                      onChange={(e) => {
-                                        const updatedTiers = e.target.checked
-                                          ? [...field.value, tier]
-                                          : field.value?.filter(
-                                              (t) => t !== tier
-                                            );
-                                        field.onChange(updatedTiers);
-                                      }}
-                                    />
-                                  </FormControl>
-                                  <FormLabel className="font-normal">
-                                    {tier}
-                                  </FormLabel>
-                                </FormItem>
-                              )}
-                            />
-                          ))}
-                        </div>
-                      </FormControl>
-                      <FormDescription>
-                        Select which tiers can access this post
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </>
-            )}
-            {step === 3 && (
-              <>
-                <FormField
-                  control={form.control}
-                  name="isPublic"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 bg-zinc-700">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">Public Post</FormLabel>
-                        <FormDescription>
-                          Make this post visible to everyone, not just your
-                          patrons
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="scheduledDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Schedule Post (Optional)</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-[240px] pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <Icons.calendar className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) =>
-                              date < new Date() || date < new Date("1900-01-01")
-                            }
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormDescription>
-                        Leave empty to publish immediately
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </>
             )}
           </motion.div>
@@ -385,13 +321,22 @@ export function CreatePostForm() {
               <Icons.arrowLeft className="mr-2 h-4 w-4" /> Previous
             </Button>
           )}
-          {step < 3 ? (
+          {step < 2 ? (
             <Button type="button" onClick={nextStep} className="ml-auto">
               Next <Icons.arrowRight className="ml-2 h-4 w-4" />
             </Button>
           ) : (
-            <Button type="submit" className="ml-auto">
-              Create Post <Icons.check className="ml-2 h-4 w-4" />
+            <Button type="submit" className="ml-auto" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                <>
+                  Create Content <Icons.check className="ml-2 h-4 w-4" />
+                </>
+              )}
             </Button>
           )}
         </div>

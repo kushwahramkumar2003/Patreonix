@@ -1,7 +1,7 @@
 "use server";
 
 import axios from "axios";
-import { getSession } from "next-auth/react";
+
 import { authOptions } from "./authOptions";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
@@ -32,10 +32,10 @@ export async function addAndPinFile(
   metadata?: PinataMetadata
 ): Promise<string> {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.publicKey) {
-      return redirect("/login");
-    }
+    // const session = await getServerSession(authOptions);
+    // if (!session?.user?.publicKey) {
+    //   return redirect("/login");
+    // }
 
     // Convert FormData to Blob
     const file = formData.get("file");

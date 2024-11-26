@@ -19,4 +19,5 @@ export const getClientAnchorProgramm = async () => {
     commitment: "processed",
   });
   return new anchor.Program(idl as PatreonixProgramms, provider);
+
 };
