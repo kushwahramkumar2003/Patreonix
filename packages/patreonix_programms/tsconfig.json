@@ -5,11 +5,6 @@
     "lib": ["es2015"],
     "module": "commonjs",
     "target": "es6",
-    "esModuleInterop": true,
-    "baseUrl": ".",
-    "paths": {
-      "@repo/patreonix_programms/*": ["./*"]
-    }
-  },
-  "exclude": ["dist", "build", "node_modules", ".anchor"]
+    "esModuleInterop": true
+  }
 }

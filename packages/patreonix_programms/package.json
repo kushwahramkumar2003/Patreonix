@@ -1,5 +1,5 @@
 {
-  "name": "@repo/patreonix_programms",
+  "name": "@repo/patreonix_program",
   "version": "1.0.0",
   "license": "ISC",
   "scripts": {
@@ -7,11 +7,13 @@
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
   },
   "exports": {
-    "./types": "./target/types/patreonix_programms.ts",
-    "./idl": "./target/idl/patreonix_programms.json"
+    "./types": "./target/types/patreonix_program.ts",
+    "./idl": "./target/idl/patreonix_program.json"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "^0.30.1"
+    "@coral-xyz/anchor": "^0.30.1",
+    "@types/jest": "^29.5.14",
+    "@types/mocha": "^10.0.10"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.0",

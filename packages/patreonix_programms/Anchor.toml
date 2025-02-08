@@ -6,7 +6,7 @@ skip-lint = false
 
 
 [programs.localnet]
-patreonix_programms = "4iL34RsAAc1i4wYBCotcUoHdohPVZf5BBberACyxZ37Z"
+patreonix_program = "CNuqSKiib2bVNZfvUbcYvFaAuPGtXwM6BeLZbrjYNB8M"
 
 
 [registry]
