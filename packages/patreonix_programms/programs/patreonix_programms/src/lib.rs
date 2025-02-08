@@ -1,16 +1,31 @@
 use anchor_lang::prelude::*;
 
-declare_id!("4iL34RsAAc1i4wYBCotcUoHdohPVZf5BBberACyxZ37Z");
+mod content;
+mod creator;
+mod errors;
+mod state;
+
+use content::*;
+use creator::*;
+use state::*;
+
+declare_id!("CNuqSKiib2bVNZfvUbcYvFaAuPGtXwM6BeLZbrjYNB8M");
 
 #[program]
-pub mod patreonix_programms {
+pub mod patreonix_program {
     use super::*;
 
+    // Initialize program state
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        msg!("Greetings from: {:?}", ctx.program_id);
+        msg!("Program initialized successfully");
+        let state = &mut ctx.accounts.state;
+        state.authority = ctx.accounts.authority.key();
+        state.total_creators = 0;
+        state.total_content = 0;
         Ok(())
     }
 
+    // Creator instructions
     pub fn register_creator(
         ctx: Context<RegisterCreator>,
         name: String,
@@ -18,30 +33,7 @@ pub mod patreonix_programms {
         bio: Option<String>,
         avatar: Option<String>,
     ) -> Result<()> {
-        let creator = &mut ctx.accounts.creator;
-        creator.authority = ctx.accounts.authority.key();
-        creator.name = name;
-        creator.email = email;
-        creator.bio = bio;
-        creator.avatar = avatar;
-        creator.registered_at = Clock::get()?.unix_timestamp;
-        creator.is_active = true;
-        creator.total_supporters = 0;
-        msg!("Creator registered: {}", creator.name);
-        Ok(())
-    }
-
-    pub fn fetch_creator(ctx: Context<FetchCreator>) -> Result<CreatorInfo> {
-        let creator = &ctx.accounts.creator;
-        Ok(CreatorInfo {
-            name: creator.name.clone(),
-            email: creator.email.clone(),
-            bio: creator.bio.clone(),
-            avatar: creator.avatar.clone(),
-            registered_at: creator.registered_at,
-            is_active: creator.is_active,
-            total_supporters: creator.total_supporters,
-        })
+        creator::register_creator(ctx, name, email, bio, avatar)
     }
 
     pub fn update_creator(
@@ -51,116 +43,53 @@ pub mod patreonix_programms {
         bio: Option<String>,
         avatar: Option<String>,
     ) -> Result<()> {
-        let creator = &mut ctx.accounts.creator;
-
-        if let Some(name) = name {
-            creator.name = name;
-        }
-        if let Some(email) = email {
-            creator.email = Some(email);
-        }
-
-        if let Some(bio) = bio {
-            creator.bio = Some(bio);
-        }
-        if let Some(avatar) = avatar {
-            creator.avatar = Some(avatar);
-        }
-
-        msg!("Creator updated: {}", creator.name);
-        Ok(())
+        creator::update_creator(ctx, name, email, bio, avatar)
     }
 
     pub fn deactivate_creator(ctx: Context<UpdateCreator>) -> Result<()> {
-        let creator = &mut ctx.accounts.creator;
-        creator.is_active = false;
-        msg!("Creator deactivated: {}", creator.name);
-        Ok(())
+        creator::deactivate_creator(ctx)
     }
 
     pub fn reactivate_creator(ctx: Context<UpdateCreator>) -> Result<()> {
-        let creator = &mut ctx.accounts.creator;
-        creator.is_active = true;
-        msg!("Creator reactivated: {}", creator.name);
-        Ok(())
+        creator::reactivate_creator(ctx)
     }
 
     pub fn increment_supporters(ctx: Context<UpdateCreator>) -> Result<()> {
-        let creator = &mut ctx.accounts.creator;
-        creator.total_supporters = creator.total_supporters.checked_add(1).unwrap();
-        msg!("Supporters incremented for creator: {}", creator.name);
-        Ok(())
+        creator::increment_supporters(ctx)
     }
-}
 
-#[derive(Accounts)]
-pub struct Initialize {}
+    pub fn fetch_creator(ctx: Context<FetchCreator>) -> Result<CreatorInfo> {
+        creator::fetch_creator(ctx)
+    }
 
-#[derive(Accounts)]
-pub struct RegisterCreator<'info> {
-    #[account(
-        init,
-        payer = authority,
-        space = 8 + // discriminator
-               32 + // authority
-               64 + // name
-               64 + // email
-               256 + // bio
-               8 + // registered_at
-               1 + // is_active
-               8, // total_supporters
-        seeds = [b"creator", authority.key().as_ref()],
-        bump
-    )]
-    pub creator: Account<'info, Creator>,
-    #[account(mut)]
-    pub authority: Signer<'info>,
-    pub system_program: Program<'info, System>,
-}
+    // Content instructions
+    pub fn create_content(
+        ctx: Context<CreateContent>,
+        title: String,
+        description: String,
+        content: String,
+        content_type: ContentType,
+        content_index: u64,
+    ) -> Result<()> {
+        content::create_content(
+            ctx,
+            title,
+            description,
+            content,
+            content_type,
+            content_index,
+        )
+    }
 
-#[derive(Accounts)]
-pub struct UpdateCreator<'info> {
-    #[account(
-        mut,
-        seeds = [b"creator", authority.key().as_ref()],
-        bump,
-        has_one = authority
-    )]
-    pub creator: Account<'info, Creator>,
-    pub authority: Signer<'info>,
-}
+    pub fn fetch_content_by_index(
+        ctx: Context<FetchContentByIndex>,
+        content_index: u64,
+    ) -> Result<ContentDetails> {
+        content::fetch_content_by_index(ctx, content_index)
+    }
 
-#[account]
-#[derive(Default)]
-pub struct Creator {
-    pub authority: Pubkey,
-    pub name: String,
-    pub email: Option<String>,
-    pub bio: Option<String>,
-    pub avatar: Option<String>,
-    pub registered_at: i64,
-    pub is_active: bool,
-    pub total_supporters: u64,
-}
-
-#[derive(Accounts)]
-pub struct FetchCreator<'info> {
-    #[account(
-        seeds = [b"creator", authority.key().as_ref()],
-        bump,
-        has_one = authority
-    )]
-    pub creator: Account<'info, Creator>,
-    pub authority: Signer<'info>,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
-pub struct CreatorInfo {
-    pub name: String,
-    pub email: Option<String>,
-    pub bio: Option<String>,
-    pub avatar: Option<String>,
-    pub registered_at: i64,
-    pub is_active: bool,
-    pub total_supporters: u64,
+    // Comment instructions
+    pub fn insert_comment(ctx: Context<InsertComment>, content: String) -> Result<()> {
+        content::insert_comment(ctx, content)
+    }
 }

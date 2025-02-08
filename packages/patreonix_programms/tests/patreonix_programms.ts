@@ -129,4 +129,104 @@ describe("patreonix_programms", () => {
     expect(creatorInfo.isActive).to.be.true;
     expect(creatorInfo.totalSupporters.toNumber()).to.equal(1);
   });
+  it("Can create new content", async () => {
+    const tx = await program.methods
+      .fetchCreator()
+      .accounts({
+        creator: creatorPDA,
+        authority: provider.publicKey,
+      })
+      .view();
+
+    console.log("Fetched creator info:", creatorInfo);
+
+    expect(creatorInfo.name).to.equal("Alice Pro");
+    expect(creatorInfo.email).to.equal("alice.pro@example.com");
+    expect(creatorInfo.bio).to.equal("Professional Crypto Artist");
+    expect(creatorInfo.isActive).to.be.true;
+    expect(creatorInfo.totalSupporters.toNumber()).to.equal(1);
+  });
+  it("Can create multiple content items", async () => {
+    // Create first content
+    const contentIndex = 0;
+    [contentPDA] = anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("content"),
+        creatorPDA.toBuffer(),
+        Buffer.from(contentIndex.toString()),
+      ],
+      program.programId
+    );
+
+    const tx1 = await program.methods
+      .createContent("First Post", "My first content", "Hello World!", {
+        text: {},
+      })
+      .accounts({
+        content: contentPDA,
+        creator: creatorPDA,
+        authority: provider.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      })
+      .rpc();
+
+    console.log("Content creation signature:", tx1);
+
+    // Create second content
+    const secondContentIndex = 1;
+    const [secondContentPDA] = anchor.web3.PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("content"),
+        creatorPDA.toBuffer(),
+        Buffer.from(secondContentIndex.toString()),
+      ],
+      program.programId
+    );
+
+    const tx2 = await program.methods
+      .createContent("Second Post", "My second content", "Hello Again!", {
+        text: {},
+      })
+      .accounts({
+        content: secondContentPDA,
+        creator: creatorPDA,
+        authority: provider.publicKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      })
+      .rpc();
+
+    console.log("Second content creation signature:", tx2);
+  });
+
+  it("Can fetch creator contents with pagination", async () => {
+    const contents = await program.methods
+      .fetchCreatorContents(10)
+      .accounts({
+        creator: creatorPDA,
+        startContent: null,
+        contentTypeFilter: null,
+      })
+      .view();
+
+    expect(contents).to.be.an("array");
+    expect(contents.length).to.be.at.least(2);
+    expect(contents[0].title).to.equal("Second Post");
+    expect(contents[1].title).to.equal("First Post");
+  });
+
+  it("Can fetch filtered creator contents", async () => {
+    const contents = await program.methods
+      .fetchCreatorContents(10)
+      .accounts({
+        creator: creatorPDA,
+        startContent: null,
+        contentTypeFilter: { text: {} },
+      })
+      .view();
+
+    expect(contents).to.be.an("array");
+    expect(
+      contents.every((content) => content.contentType.hasOwnProperty("text"))
+    ).to.be.true;
+  });
 });
