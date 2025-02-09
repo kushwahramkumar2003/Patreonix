@@ -1,9 +1,9 @@
 <div align="center">
   
-  ![Patreonix Banner](/placeholder.svg?height=300&width=1200)
+  ![Patreonix Banner](https://raw.githubusercontent.com/kushwahramkumar2003/Patreonix/main/assets/banner.png)
 
   <h1>
-    <img src="/placeholder.svg?height=30&width=30" alt="Logo" style="vertical-align: middle"> 
+    <img src="https://raw.githubusercontent.com/kushwahramkumar2003/Patreonix/main/assets/logo.png" alt="Logo" style="vertical-align: middle" width="30" height="30"> 
     Patreonix
   </h1>
 
@@ -30,7 +30,7 @@
   <br/>
 
   <p align="center">
-    <img src="/placeholder.svg?height=400&width=800" alt="Patreonix Demo" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+    <img src="https://raw.githubusercontent.com/kushwahramkumar2003/Patreonix/main/assets/demo.png" alt="Patreonix Demo" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
   </p>
 </div>
 
@@ -41,28 +41,28 @@
 <table align="center">
   <tr>
     <td align="center">
-      <img src="/placeholder.svg?height=50&width=50" width="60" alt="Creator Dashboard"/>
+      <img src="https://raw.githubusercontent.com/kushwahramkumar2003/Patreonix/main/assets/icons/dashboard.png" width="60" alt="Creator Dashboard"/>
       <br />
       <b>Creator Dashboard</b>
       <br />
       Comprehensive analytics and content management
     </td>
     <td align="center">
-      <img src="/placeholder.svg?height=50&width=50" width="60" alt="Web3 Payments"/>
+      <img src="https://raw.githubusercontent.com/kushwahramkumar2003/Patreonix/main/assets/icons/payments.png" width="60" alt="Web3 Payments"/>
       <br />
       <b>Web3 Payments</b>
       <br />
       Native Solana token integration
     </td>
     <td align="center">
-      <img src="/placeholder.svg?height=50&width=50" width="60" alt="IPFS Storage"/>
+      <img src="https://raw.githubusercontent.com/kushwahramkumar2003/Patreonix/main/assets/icons/ipfs.png" width="60" alt="IPFS Storage"/>
       <br />
       <b>IPFS Storage</b>
       <br />
       Decentralized content delivery
     </td>
     <td align="center">
-      <img src="/placeholder.svg?height=50&width=50" width="60" alt="Analytics"/>
+      <img src="https://raw.githubusercontent.com/kushwahramkumar2003/Patreonix/main/assets/icons/analytics.png" width="60" alt="Analytics"/>
       <br />
       <b>Real-time Analytics</b>
       <br />
@@ -145,7 +145,7 @@ patreonix/
 │       └── ...
 ├── packages/
 │   ├── eslint-config/        # ESLint Rules
-│   ├── patreonix_programms/  # Solana Contracts
+│   ├── patreonix_program/  # Solana Contracts
 │   ├── typescript-config/    # TS Configs
 │   └── ui/                   # Shared UI Kit
 └── ...
@@ -255,28 +255,28 @@ yarn dev
 <table>
 <tr>
 <td align="center">
-  <img src="/placeholder.svg?height=80&width=80" width="80" alt="Performance"/>
+  <img src="https://raw.githubusercontent.com/kushwahramkumar2003/Patreonix/main/assets/metrics/performance.png" width="80" alt="Performance"/>
   <br/>
   <b>98/100</b>
   <br/>
   Performance
 </td>
 <td align="center">
-  <img src="/placeholder.svg?height=80&width=80" width="80" alt="Accessibility"/>
+  <img src="https://raw.githubusercontent.com/kushwahramkumar2003/Patreonix/main/assets/metrics/accessibility.png" width="80" alt="Accessibility"/>
   <br/>
   <b>100/100</b>
   <br/>
   Accessibility
 </td>
 <td align="center">
-  <img src="/placeholder.svg?height=80&width=80" width="80" alt="Best Practices"/>
+  <img src="https://raw.githubusercontent.com/kushwahramkumar2003/Patreonix/main/assets/metrics/best-practices.png" width="80" alt="Best Practices"/>
   <br/>
   <b>95/100</b>
   <br/>
   Best Practices
 </td>
 <td align="center">
-  <img src="/placeholder.svg?height=80&width=80" width="80" alt="SEO"/>
+  <img src="https://raw.githubusercontent.com/kushwahramkumar2003/Patreonix/main/assets/metrics/seo.png" width="80" alt="SEO"/>
   <br/>
   <b>100/100</b>
   <br/>
@@ -293,7 +293,7 @@ yarn dev
 yarn test
 
 # Run Solana program tests
-cd packages/patreonix_programms
+cd packages/patreonix_program
 anchor test
 
 # Check code quality
@@ -346,7 +346,7 @@ yarn lint
 
 <div align="center">
   <a href="https://github.com/kushwahramkumar2003/Patreonix/graphs/contributors">
-    <img src="/placeholder.svg?height=100&width=600" alt="Contributors" />
+    <img src="https://contrib.rocks/image?repo=kushwahramkumar2003/Patreonix" alt="Contributors" />
   </a>
 </div>
 
@@ -376,7 +376,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 <div align="center">
 
-  <img src="/placeholder.svg?height=50&width=50" alt="Patreonix Heart" width="50" />
+  <img src="https://raw.githubusercontent.com/kushwahramkumar2003/Patreonix/main/assets/icons/heart.png" alt="Patreonix Heart" width="50" />
   
   <h3>Made with ❤️ by the Patreonix Team</h3>
 
