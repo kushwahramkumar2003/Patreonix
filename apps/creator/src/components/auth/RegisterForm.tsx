@@ -9,8 +9,8 @@ import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
-import { PatreonixProgramms } from "@repo/patreonix_programms/types";
-import IDL from "@repo/patreonix_programms/idl";
+import { PatreonixProgram } from "@repo/patreonix_program/types";
+import IDL from "@repo/patreonix_program/idl";
 import Button from "@repo/ui/components/ui/Button";
 import {
   Form,
@@ -51,7 +51,7 @@ const RegisterForm = () => {
   const router = useRouter();
 
   const [stage, setStage] = useState<FormStage>("wallet");
-  const [program, setProgram] = useState<Program<PatreonixProgramms> | null>(
+  const [program, setProgram] = useState<Program<PatreonixProgram> | null>(
     null
   );
   const [isLoading, setIsLoading] = useState(false);
@@ -80,8 +80,8 @@ const RegisterForm = () => {
             commitment: "confirmed",
           });
 
-          const programInstance = new Program<PatreonixProgramms>(
-            IDL as PatreonixProgramms,
+          const programInstance = new Program<PatreonixProgram>(
+            IDL as PatreonixProgram,
             provider
           );
 
@@ -422,7 +422,6 @@ const RegisterForm = () => {
 
   return (
     <div className="bg-zinc-800/50 backdrop-blur-xl rounded-lg border border-zinc-700 p-6 shadow-xl">
-     
       <AnimatePresence mode="wait">
         <motion.div
           key={stage}

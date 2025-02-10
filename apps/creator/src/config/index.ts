@@ -1,4 +1,4 @@
-import idl from "@repo/patreonix_programms/idl";
+import idl from "@repo/patreonix_program/idl";
 import { PublicKey } from "@solana/web3.js";
 
 export const config = {

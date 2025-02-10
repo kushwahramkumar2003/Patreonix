@@ -7,8 +7,8 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import bs58 from "bs58";
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { PatreonixProgramms } from "@repo/patreonix_programms/types";
-import idl from "@repo/patreonix_programms/idl";
+import { PatreonixProgram } from "@repo/patreonix_program/types";
+import idl from "@repo/patreonix_program/idl";
 import config from "@/config";
 
 const SigninSchema = z.object({
@@ -35,7 +35,7 @@ const createProgram = (connection: Connection) => {
   );
 
   // Create program instance
-  return new Program(idl as PatreonixProgramms, provider);
+  return new Program(idl as PatreonixProgram, provider);
 };
 
 export const authOptions: NextAuthOptions = {

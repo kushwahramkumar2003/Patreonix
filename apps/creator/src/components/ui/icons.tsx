@@ -26,6 +26,8 @@ import {
   UserPlus,
   DollarSign,
   Upload,
+  TriangleAlert,
+  User,
 } from "lucide-react";
 import { CgSpinnerTwo } from "react-icons/cg";
 import { IoRefresh } from "react-icons/io5";
@@ -58,4 +60,7 @@ export const Icons = {
   upload: Upload,
   spinner: CgSpinnerTwo,
   refresh: IoRefresh,
+  loader: CgSpinnerTwo,
+  alertTriangle: TriangleAlert,
+  user: User,
 };

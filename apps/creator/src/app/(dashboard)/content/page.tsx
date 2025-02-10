@@ -68,6 +68,7 @@ export default function ContentManagementPage() {
                 <SelectItem value="videos">Videos</SelectItem>
                 <SelectItem value="audio">Audio</SelectItem>
                 <SelectItem value="images">Images</SelectItem>
+                <SelectItem value="text">Text</SelectItem>
               </SelectContent>
             </Select>
           </div>

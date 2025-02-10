@@ -31,8 +31,8 @@ import { getCreatorPda } from "@/lib/anchor";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import * as anchor from "@coral-xyz/anchor";
 import config from "@/config";
-import idl from "@repo/patreonix_programms/idl";
-import { PatreonixProgramms } from "@repo/patreonix_programms/types";
+import idl from "@repo/patreonix_program/idl";
+import { PatreonixProgram } from "@repo/patreonix_program/types";
 import { toast } from "sonner";
 
 const profileSchema = z.object({
@@ -64,7 +64,7 @@ export function ProfileSettings({ data }) {
     skipPreflight: false,
   });
 
-  const programm = new anchor.Program(idl as PatreonixProgramms, provider);
+  const programm = new anchor.Program(idl as PatreonixProgram, provider);
 
   const {
     register,

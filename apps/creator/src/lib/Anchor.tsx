@@ -2,8 +2,8 @@
 
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import * as anchor from "@coral-xyz/anchor";
-import idl from "@repo/patreonix_programms/idl";
-import { PatreonixProgramms } from "@repo/patreonix_programms/types";
+import idl from "@repo/patreonix_program/idl";
+import { PatreonixProgram } from "@repo/patreonix_program/types";
 import { Connection } from "@solana/web3.js";
 import config from "../config/index";
 
@@ -18,6 +18,5 @@ export const getClientAnchorProgramm = async () => {
   const provider = new anchor.AnchorProvider(connection, wallet, {
     commitment: "processed",
   });
-  return new anchor.Program(idl as PatreonixProgramms, provider);
-
+  return new anchor.Program(idl as PatreonixProgram, provider);
 };

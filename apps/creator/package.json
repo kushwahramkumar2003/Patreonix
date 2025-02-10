@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbo",
-    "dev1": "next dev ",
+    "dev1": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -14,7 +14,7 @@
     "@pinata/sdk": "^2.1.0",
     "@react-three/drei": "^9.115.0",
     "@react-three/fiber": "^8.17.10",
-    "@repo/patreonix_programms": "*",
+    "@repo/patreonix_program": "*",
     "@repo/ui": "*",
     "@solana/wallet-adapter-base": "^0.9.23",
     "@solana/wallet-adapter-react": "^0.15.35",
@@ -60,8 +60,8 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.6.3",
     "eslint-plugin-import": "^2.31.0",
-    "postcss": "^8.4.47",
-    "tailwindcss": "^3.4.14",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15",
     "typescript": "5.5.4"
   }
 }

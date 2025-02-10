@@ -1,21 +1,15 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Textarea } from "@repo/ui/components/ui/textarea";
 import { toast } from "sonner";
-import Button from "@repo/ui/components/ui/Button";
-import { Input } from "@repo/ui/components/ui/Input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/ui/components/ui/select";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { addAndPinFile } from "@/lib/ipfs";
+import { Icons } from "@/components/ui/icons";
+import { useProgram } from "@/hooks/usePatreonix";
 import {
   Form,
   FormControl,
@@ -25,77 +19,95 @@ import {
   FormLabel,
   FormMessage,
 } from "@repo/ui/components/ui/form";
+import { Input } from "@repo/ui/components/ui/Input";
+import { Textarea } from "@repo/ui/components/ui/textarea";
 import {
-  useAnchorWallet,
-  useConnection,
-  useWallet,
-} from "@solana/wallet-adapter-react";
-import { PublicKey } from "@solana/web3.js";
-import { getCreatorPda } from "@/lib/anchor";
-import { addAndPinFile } from "@/lib/ipfs";
-import { Icons } from "@/components/ui/icons";
-import * as anchor from "@coral-xyz/anchor";
-import idl from "@repo/patreonix_programms/idl";
-import { PatreonixProgramms } from "@repo/patreonix_programms/types";
-import { PlugIcon } from "lucide-react";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@repo/ui/components/ui/select";
+import Button from "@repo/ui/components/ui/Button";
 
+// Constants
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_FILE_TYPES = {
+  text: [".txt"],
+  image: [".png", ".jpg", ".jpeg", ".gif", ".webp"],
+  video: [".mp4", ".webm"],
+  audio: [".mp3", ".wav", ".ogg"],
+} as const;
 
-const formSchema = z.object({
-  title: z
-    .string()
-    .min(2, "Title must be at least 2 characters")
-    .max(100, "Title must be less than 100 characters"),
-  description: z
-    .string()
-    .min(10, "Description must be at least 10 characters")
-    .max(500, "Description must be less than 500 characters"),
-  content: z.string().min(1, "Content is required"),
-  contentType: z.enum(["text", "image", "video", "audio"]),
-  file: z
-    .instanceof(File)
-    .optional()
-    .refine((file) => {
-      if (file) {
-        return file.size <= MAX_FILE_SIZE;
+// Type definitions
+type ContentType = keyof typeof ALLOWED_FILE_TYPES;
+
+interface FileWithPreview extends File {
+  preview?: string;
+}
+
+// Form schema with improved validation
+const formSchema = z
+  .object({
+    title: z
+      .string()
+      .min(2, "Title must be at least 2 characters")
+      .max(100, "Title must be less than 100 characters")
+      .trim(),
+    description: z
+      .string()
+      .min(10, "Description must be at least 10 characters")
+      .max(500, "Description must be less than 500 characters")
+      .trim(),
+    content: z.string().optional(),
+    contentType: z.enum(["text", "image", "video", "audio"] as const),
+    file: z.custom<FileWithPreview>().optional(),
+  })
+  .superRefine((values, ctx) => {
+    const { file, content, contentType } = values;
+    if (!file && !content) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Either file or content is required",
+      });
+    }
+    if (file) {
+      if (file.size > MAX_FILE_SIZE) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `File size must be less than ${MAX_FILE_SIZE / 1024 / 1024}MB`,
+        });
       }
-      return true;
-    }, `Max file size is 5MB.`),
-});
+      const fileType = file.type.split("/")[1];
+      const allowedTypes = ALLOWED_FILE_TYPES[contentType as ContentType];
+      if (
+        !allowedTypes.some((type) => file.name.toLowerCase().endsWith(type))
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `File type must be one of: ${allowedTypes.join(", ")}`,
+        });
+      }
+    }
+  });
+
+type FormValues = z.infer<typeof formSchema>;
 
 const contentTypeOptions = [
   { value: "text", label: "Text", icon: Icons.fileText },
   { value: "image", label: "Image", icon: Icons.image },
   { value: "video", label: "Video", icon: Icons.video },
   { value: "audio", label: "Audio", icon: Icons.audio },
-];
+] as const;
 
 export function CreatePostForm() {
-  const wallet = useAnchorWallet();
-  const { connection } = useConnection();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
   const { publicKey } = useWallet();
-  const [program, setProgram] =
-    useState<anchor.Program<PatreonixProgramms> | null>(null);
+  const { program } = useProgram();
 
-  const initializeProgram = useCallback(() => {
-    if (!wallet) {
-      console.log("Wallet not connected!");
-      return;
-    }
-    const provider = new anchor.AnchorProvider(connection, wallet, {
-      commitment: "processed",
-    });
-    const program = new anchor.Program(idl as PatreonixProgramms, provider);
-    setProgram(program);
-  }, [wallet, connection]);
-
-  useEffect(() => {
-    initializeProgram();
-  }, [initializeProgram]);
-
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
@@ -103,78 +115,102 @@ export function CreatePostForm() {
       content: "",
       contentType: "text",
     },
+    mode: "onChange",
   });
 
   const contentType = form.watch("contentType");
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  // File preview handler
+  const handleFileChange = useCallback(
+    (file: File | undefined) => {
+      if (filePreview) {
+        URL.revokeObjectURL(filePreview);
+      }
+
+      if (file) {
+        const preview = URL.createObjectURL(file);
+        setFilePreview(preview);
+        form.setValue("file", Object.assign(file, { preview }));
+      } else {
+        setFilePreview(null);
+        form.setValue("file", undefined);
+      }
+    },
+    [filePreview, form]
+  );
+
+  // Cleanup file preview on unmount
+  React.useEffect(() => {
+    return () => {
+      if (filePreview) {
+        URL.revokeObjectURL(filePreview);
+      }
+    };
+  }, [filePreview]);
+
+  const onSubmit = async (values: FormValues) => {
     if (!publicKey) {
-      toast.error("Please connect your wallet first.");
+      toast.error("Please connect your wallet first");
       return;
     }
 
     if (!program) {
-      toast.error("Program not initialized. Please try again.");
+      toast.error("Program not connected");
       return;
     }
 
     setIsSubmitting(true);
+    const toastId = toast.loading("Creating content...");
+
     try {
-      let contentUrl = values.content;
+      let contentUrl = values.content || "";
+
       if (values.file) {
         const formData = new FormData();
         formData.append("file", values.file);
-        contentUrl = await addAndPinFile(formData);
+
+        try {
+          contentUrl = await addAndPinFile(formData);
+        } catch (error) {
+          throw new Error("Failed to upload file to IPFS");
+        }
       }
 
-      const contentTypeMap = {
-        text: { text: {} },
-        image: { image: {} },
-        video: { video: {} },
-        audio: { audio: {} },
-      };
+      const tx = await program.createPost({
+        creatorPublicKey: publicKey,
+        title: values.title.trim(),
+        description: values.description.trim(),
+        contentUrl,
+        contentType: values.contentType,
+      });
 
-      const [contentPda] = PublicKey.findProgramAddressSync(
-        [Buffer.from("content"), publicKey.toBuffer()],
-        program.programId
-      );
-
-      const creatorPda = await getCreatorPda(publicKey);
-
-      if (!creatorPda) {
-        toast.error("Failed to get creator PDA. Please try again.");
-        return;
-      }
-
-      const tx = await program.methods
-        .createContent(
-          values.title,
-          values.description,
-          contentUrl,
-          contentTypeMap[values.contentType]
-        )
-        .accounts({
-          // content: contentPda,
-          creator: creatorPda,
-          authority: publicKey,
-          // systemProgram: anchor.web3.SystemProgram.programId,
-        })
-        .rpc();
-
-      console.log("Transaction signature:", tx);
-      toast.success("Content created successfully!");
+      toast.success("Content created successfully!", { id: toastId });
       form.reset();
       setStep(1);
+      setFilePreview(null);
     } catch (error) {
       console.error("Error creating content:", error);
-      toast.error("Failed to create content. Please try again.");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create content",
+        { id: toastId }
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const nextStep = () => setStep((prev) => Math.min(prev + 1, 2));
-  const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
+  const nextStep = async () => {
+    const isFirstStepValid = await form.trigger([
+      "title",
+      "description",
+      "contentType",
+    ]);
+    if (isFirstStepValid) {
+      setStep(2);
+    }
+  };
+
+  const prevStep = () => setStep(1);
 
   return (
     <Form {...form}>
@@ -186,9 +222,10 @@ export function CreatePostForm() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
+            className="space-y-6"
           >
             {step === 1 && (
-              <>
+              <div className="space-y-6">
                 <FormField
                   control={form.control}
                   name="title"
@@ -209,6 +246,7 @@ export function CreatePostForm() {
                     </FormItem>
                   )}
                 />
+
                 <FormField
                   control={form.control}
                   name="description"
@@ -219,7 +257,7 @@ export function CreatePostForm() {
                         <Textarea
                           placeholder="Enter content description"
                           {...field}
-                          className="bg-zinc-700 text-zinc-100"
+                          className="bg-zinc-700 text-zinc-100 min-h-[100px]"
                         />
                       </FormControl>
                       <FormDescription>
@@ -229,6 +267,7 @@ export function CreatePostForm() {
                     </FormItem>
                   )}
                 />
+
                 <FormField
                   control={form.control}
                   name="contentType"
@@ -236,7 +275,12 @@ export function CreatePostForm() {
                     <FormItem>
                       <FormLabel>Content Type</FormLabel>
                       <Select
-                        onValueChange={field.onChange}
+                        onValueChange={(value: ContentType) => {
+                          field.onChange(value);
+                          // Reset file when content type changes
+                          handleFileChange(undefined);
+                          form.setValue("content", "");
+                        }}
                         defaultValue={field.value}
                       >
                         <FormControl>
@@ -262,10 +306,11 @@ export function CreatePostForm() {
                     </FormItem>
                   )}
                 />
-              </>
+              </div>
             )}
+
             {step === 2 && (
-              <>
+              <div className="space-y-6">
                 {contentType === "text" ? (
                   <FormField
                     control={form.control}
@@ -292,32 +337,52 @@ export function CreatePostForm() {
                       <FormItem>
                         <FormLabel>Upload {contentType}</FormLabel>
                         <FormControl>
-                          <Input
-                            type="file"
-                            accept={`.${contentType}`}
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                onChange(file);
-                              }
-                            }}
-                            {...field}
-                            className="bg-zinc-700 text-zinc-100"
-                          />
+                          <div className="space-y-4">
+                            <Input
+                              type="file"
+                              accept={ALLOWED_FILE_TYPES[contentType].join(",")}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                handleFileChange(file);
+                              }}
+                              {...field}
+                              className="bg-zinc-700 text-zinc-100"
+                            />
+                            {filePreview && contentType === "image" && (
+                              <div className="mt-4">
+                                <img
+                                  src={filePreview}
+                                  alt="Preview"
+                                  className="max-w-full h-auto max-h-[200px] rounded-lg"
+                                />
+                              </div>
+                            )}
+                          </div>
                         </FormControl>
-                        <FormDescription>Max file size: 5MB</FormDescription>
+                        <FormDescription>
+                          Accepted formats:{" "}
+                          {ALLOWED_FILE_TYPES[contentType].join(", ")}
+                          <br />
+                          Max file size: 5MB
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 )}
-              </>
+              </div>
             )}
           </motion.div>
         </AnimatePresence>
-        <div className="flex justify-between">
+
+        <div className="flex justify-between pt-4">
           {step > 1 && (
-            <Button type="button" onClick={prevStep} variant="outline">
+            <Button
+              type="button"
+              onClick={prevStep}
+              variant="outline"
+              className="bg-zinc-700 text-zinc-100"
+            >
               <Icons.arrowLeft className="mr-2 h-4 w-4" /> Previous
             </Button>
           )}

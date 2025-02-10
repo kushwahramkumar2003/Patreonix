@@ -32,10 +32,10 @@ export async function addAndPinFile(
   metadata?: PinataMetadata
 ): Promise<string> {
   try {
-    // const session = await getServerSession(authOptions);
-    // if (!session?.user?.publicKey) {
-    //   return redirect("/login");
-    // }
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.publicKey) {
+      return redirect("/login");
+    }
 
     // Convert FormData to Blob
     const file = formData.get("file");
